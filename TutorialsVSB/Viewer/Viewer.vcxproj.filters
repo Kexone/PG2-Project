@@ -15,6 +15,24 @@
     <ClCompile Include="program.cpp" />
     <ClCompile Include="mouse.cpp" />
     <ClCompile Include="sceneManager.cpp" />
+    <ClCompile Include="demo3.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo4.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo5.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo6_1.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo6.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo6_vase.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demos.h">
@@ -122,6 +140,45 @@
     </ClInclude>
     <ClInclude Include="CoreHeaders\vao_SceneOrigin.h">
       <Filter>CoreHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="vao_TetraHeader.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_TetraHeader.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo3.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="vao_CubeV3C4.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_CubeV3C4.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo4.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreHeaders\entity_OBJ.h">
+      <Filter>CoreHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="demo5.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_Cube.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="vao_CubeV3C4N3T2.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo6_1.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo6.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo6_vase.h">
+      <Filter>Demos</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

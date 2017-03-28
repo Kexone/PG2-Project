@@ -42,6 +42,10 @@ inline TwBar* SceneGUI::createBar()
 		"group = 'Screen' "
 		"label = 'Toggle Fullscreen' "
 		"help  = 'Toggle Fullscreen' ");
+	TwAddButton(bar, "Test", toggleFullscreen, NULL,
+		"group = 'Test' "
+		"label = 'Test' "
+		"help  = 'Test' ");
 	return bar;
 }
 

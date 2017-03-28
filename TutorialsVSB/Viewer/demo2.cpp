@@ -3,10 +3,12 @@
 #include "vao_SceneOrigin.h"
 #include "vao_GridXY.h"
 #include "vao_CubeV3C4.h"
+#include "vao_TetraHeader.h"
 
 #include "entity_SceneOrigin.h"
 #include "entity_GridXY.h"
 #include "entity_Cube_Simple.h"
+#include "entity_TetraHeader.h"
 
 void Demo2::initShaders()
 {
@@ -25,7 +27,8 @@ void Demo2::initVAOs()
 	vao1->init();
 	m_sceneData->vaos.push_back(vao1);
 
-	VAO_CubeV3C4* vao2 = new VAO_CubeV3C4();
+	//VAO_CubeV3C4* vao2 = new VAO_CubeV3C4();
+	VAO_TetraHeader* vao2 = new VAO_TetraHeader();
 	vao2->init();
 	m_sceneData->vaos.push_back(vao2);
 }
@@ -44,7 +47,8 @@ void Demo2::initInfoEntities()
 
 void Demo2::initSceneEntities()
 {
-	Entity_Cube_Simple *e = new Entity_Cube_Simple(m_sceneData->vaos[2]);
+	//Entity_Cube_Simple *e = new Entity_Cube_Simple(m_sceneData->vaos[2]);
+	Entity_TetraHeader *e = new Entity_TetraHeader(m_sceneData->vaos[2]);
 	e->init();
 	m_sceneData->sceneEntities.push_back(e);
 }
