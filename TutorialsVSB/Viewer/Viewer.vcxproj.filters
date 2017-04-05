@@ -33,6 +33,15 @@
     <ClCompile Include="demo6_vase.cpp">
       <Filter>Demos</Filter>
     </ClCompile>
+    <ClCompile Include="demo7.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo7_1.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo_8.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demos.h">
@@ -178,6 +187,15 @@
       <Filter>Demos</Filter>
     </ClInclude>
     <ClInclude Include="demo6_vase.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo7.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo7_1.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo_8.h">
       <Filter>Demos</Filter>
     </ClInclude>
   </ItemGroup>
