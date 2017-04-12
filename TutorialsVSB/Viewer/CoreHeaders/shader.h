@@ -110,7 +110,7 @@ inline void Shader::openFromFile(const char *filename)
 		throw "Shader::exception(80):  shader did not compile!";
 	}
 
-	m_shaderState = SS_COMPILED;
+		m_shaderState = SS_COMPILED;
 
 	free(program);
 }

@@ -1,4 +1,4 @@
-#include "demo_8.h"
+#include "demo9.h"
 
 #include "vao_SceneOrigin.h"
 #include "vao_GridXY.h"
@@ -9,17 +9,17 @@
 #include "entity_Cube.h"
 #include "entity_OBJ.h"
 
-void Demo8::initShaders()
+void Demo9::initShaders()
 {
 	addResPath("shaders/");
 	initShaderProgram("simple_v3_c4.vert", "simple_v3_c4.frag");
 
 	//TODO - update previous ADS shader to accept texture:
-	initShaderProgram("adsObj_v3_n3_t3_normal.vert", "adsObj_v3_n3_t3_normal.frag");
+	initShaderProgram("adsObj_v3_n3_t3_parallax.vert", "adsObj_v3_n3_t3_parallax.frag");
 	resetResPath();
 }
 
-void Demo8::initModels()
+void Demo9::initModels()
 {
 	ObjLoader objL;
 	Model* m;
@@ -31,7 +31,7 @@ void Demo8::initModels()
 	resetResPath();
 }
 
-void Demo8::initVAOs()
+void Demo9::initVAOs()
 {
 	VAO_SceneOrigin* vao0 = new VAO_SceneOrigin();
 	vao0->init();
@@ -46,7 +46,7 @@ void Demo8::initVAOs()
 	m_sceneData->vaos.push_back(vao2);
 }
 
-void Demo8::initTextures()
+void Demo9::initTextures()
 {
 	addResPath("textures/");
 	//Load sprite textures
@@ -84,7 +84,37 @@ void Demo8::initTextures()
 	image = ImageManager::GenericLoader(getResFile("stonewallNormal.bmp"), 0);
 
 	//TODO Create Texture:
-	glGenTextures(2, &texID);
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	// Load tex image based on depth
+	if (FreeImage_GetBPP(image) == 8) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+	}
+	else if (FreeImage_GetBPP(image) == 24) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+	}
+	else if (FreeImage_GetBPP(image) == 32) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+	}
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
+	glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
+
+	FreeImage_Unload(image);
+	m_sceneData->textures.push_back(texID);
+
+
+	// Another texture
+	image = ImageManager::GenericLoader(getResFile("stonewallDepth.bmp"), 0);
+
+	//TODO Create Texture:
+	glGenTextures(1, &texID);
 	glBindTexture(GL_TEXTURE_2D, texID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -112,7 +142,7 @@ void Demo8::initTextures()
 	resetResPath();
 }
 
-void Demo8::initMaterials()
+void Demo9::initMaterials()
 {
 	Material *m = new Material();
 
@@ -135,7 +165,7 @@ void Demo8::initMaterials()
 	m_sceneData->materials.push_back(m);
 }
 
-void Demo8::initInfoEntities()
+void Demo9::initInfoEntities()
 {
 	Entity_SceneOrigin *e0 = new Entity_SceneOrigin(m_sceneData->vaos[0]);
 	e0->init();
@@ -146,7 +176,7 @@ void Demo8::initInfoEntities()
 	m_sceneData->infoEntities.push_back(e1);
 }
 
-void Demo8::initSceneEntities()
+void Demo9::initSceneEntities()
 {
 	Entity_OBJ *obj = new Entity_OBJ(m_sceneData->models[0], m_sceneData->vaos[2]);
 	obj->setPosition(0, 0, 0);
@@ -156,7 +186,7 @@ void Demo8::initSceneEntities()
 	m_sceneData->sceneEntities.push_back(obj);
 }
 
-void Demo8::render()
+void Demo9::render()
 {
 	Entity *e = nullptr;
 	SceneSetting *ss = SceneSetting::GetInstance();
@@ -213,6 +243,11 @@ void Demo8::render()
 	glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
 	uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
 	glUniform1i(uniform, 1);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
+	uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+	glUniform1i(uniform, 2);
 
 	e->draw();
 #pragma endregion

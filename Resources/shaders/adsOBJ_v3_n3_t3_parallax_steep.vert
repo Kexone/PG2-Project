@@ -61,8 +61,8 @@ void main()
 	ecViewDir = -vec3(ecPosition);
 
 	// Object space texture coordinates
-	vs_out.tsTexCoords = vec3(TMatrix * MMatrix * vec4(VertexPosition, 1.0)).xy;
-
+	//vs_out.tsTexCoords = vec3(TMatrix * MMatrix * vec4(VertexPosition, 1.0)).xy;
+	vs_out.tsTexCoords = VertexTexCoords.xy;	
 	// Tangent space
 	vec3 T = vec3(MVMatrix * vec4(VertexTStangent, 0.0));
 	vec3 B = vec3(MVMatrix * vec4(VertexTSbitangent, 0.0));

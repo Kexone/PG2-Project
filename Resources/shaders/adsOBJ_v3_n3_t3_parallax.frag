@@ -26,6 +26,10 @@ uniform LightInfo light;
 uniform MaterialInfo material;
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalTexture;
+uniform sampler2D depthTexture;
+
+uniform float scale = 0.1;
+uniform float bias = 0.1;
 
 //The prefix ec means Eye Coordinates in the Eye Coordinate System
 in vec4 ecPosition;		
@@ -43,10 +47,12 @@ in VS_OUT {
 
 void main()
 {
-	vec3 tsTextureNormal = texture2D(normalTexture, fs_in.tsTexCoords).rgb * 2.0 - vec3(1.0);
-	vec4 texColor = vec4(1.0, 1.0, 1.0, 1.0);
+	float height = scale * (1.0 - texture2D( depthTexture, fs_in.tsTexCoords).r) + bias;
+	vec2 offset = (fs_in.tsViewDir.xy / fs_in.tsViewDir.z)  * height;
 	
-	texColor = texColor * texture2D(diffuseTexture, fs_in.tsTexCoords).rgba;
+	vec4 texColor = vec4(1.0, 1.0, 1.0, 1.0);
+	vec3 tsTextureNormal = texture2D(normalTexture, fs_in.tsTexCoords + offset).rgb * 2.0 - vec3(1.0);
+	texColor = texColor * texture2D(diffuseTexture, fs_in.tsTexCoords + offset).rgba;
 	FragColor = light.ambient * texColor * material.ambient;
 
 	// Lambert test

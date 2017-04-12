@@ -42,6 +42,12 @@
     <ClCompile Include="demo_8.cpp">
       <Filter>Demos</Filter>
     </ClCompile>
+    <ClCompile Include="demo9.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo9_1.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demos.h">
@@ -196,6 +202,12 @@
       <Filter>Demos</Filter>
     </ClInclude>
     <ClInclude Include="demo_8.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo9.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo9_1.h">
       <Filter>Demos</Filter>
     </ClInclude>
   </ItemGroup>
