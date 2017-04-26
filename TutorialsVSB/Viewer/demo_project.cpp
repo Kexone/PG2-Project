@@ -309,9 +309,9 @@ void DemoProject::render()
 		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
 		glUniform1i(uniform, 2);
-		//e->setPosition(0, 0, 0);
-		e->rotate(0.1, 0, 0, 1);
-	//	e->setPosition(1, -1, 1);
+		e->setPosition(0, 0, 0);
+		e->rotate(0.1, 0, 0, 1);	
+		e->setPosition(1, -1, 1);
 		//e->rotate(0.1, 1, 0, 0);
 		//e->setScale(1, 1, 1);
 		//e->setPosition(1, -1, 1);
