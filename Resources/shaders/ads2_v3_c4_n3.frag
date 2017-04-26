@@ -10,9 +10,23 @@ struct LightInfo {
 	float spotCutoff;			//Specifies maximum spread angle of spotlight (180 = off).
 };
 
+struct MaterialInfo
+{
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;	
+	float transparency;
+	float shininess;
+	int illumination;
+	int hasDiffuseTexture;
+	int diffuseTexture;
+};
+
 layout(location = 0) out vec4 FragColor;
 
+
 uniform LightInfo light;
+uniform MaterialInfo material;
 
 //The prefix ec means Eye Coordinates in the Eye Coordinate System
 in vec4 ecPosition;			
@@ -22,17 +36,19 @@ in vec3 ecViewDir;
 
 void main()
 {
-	//vec3 N = normalize(ecNormal);
-	//vec3 L = normalize(ecLightDir);
-	//if( dot(V,L)<0 ){
-	//vec3 V = reflect(N,L);
 
-	if(dot(ecLightDir,ecNormal)<0){
+	vec3 N = normalize(ecNormal);
+	vec3 L = normalize(ecLightDir);
+
+	float lambert = dot(N, L);
+	FragColor = material.ambient * light.ambient;
 	
-		FragColor = vec4(1,0,1,1);
-	}
-	else FragColor = vec4(0,0,1,1);
+	vec3 E = normalize(ecViewDir);
+    vec3 R = normalize(reflect(-L, N));    
 
+	vec4 diffuse = abs(lambert) * material.diffuse * light.diffuse;
+    vec4 specular = pow(abs(dot(R, E)), material.shininess) * light.specular * material.specular;
 
+	FragColor += diffuse + specular;
 
 }

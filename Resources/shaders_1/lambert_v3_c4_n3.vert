@@ -29,9 +29,10 @@ out vec3 ecViewDir;
 
 void main()
 {
-	 ecPosition = MVMatrix * vec4(VertexPosition, 1);			
-	 ecLightDir = vec3((VMatrix * light.position) - ecPosition);
-	 ecNormal =  NormalMatrix * VertexNormal;
-	 ecViewDir = -vec3(ecPosition);
-	 gl_Position = PMatrix * ecPosition;
+
+	ecPosition = MVMatrix * vec4(VertexPosition,1);
+	ecLightDir = vec3((VMatrix * light.position)- ecPosition);
+	ecNormal = NormalMatrix * VertexNormal;
+	ecViewDir = -vec3(ecPosition);
+	gl_Position = PMatrix * ecPosition;
 }

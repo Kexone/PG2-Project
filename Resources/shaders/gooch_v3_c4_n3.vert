@@ -10,9 +10,21 @@ struct LightInfo {
 	float spotCutoff;			//Specifies maximum spread angle of spotlight (180 = off).
 };
 
+struct Material
+{
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;	
+	float transparency;
+	float shininess;
+	int illumination;
+	int hasDiffuseTexture;
+	int diffuseTexture;
+};
+
 layout(location = 0) in vec3 VertexPosition;
-layout(location = 1) in vec4 VertexColor;
-layout(location = 2) in vec3 VertexNormal;
+layout(location = 1) in vec3 VertexNormal;
+layout(location = 2) in vec3 VertexTex;
 
 uniform mat4 PMatrix;		//Camera projection matrix
 uniform mat4 VMatrix;		//Camera view matrix
@@ -27,6 +39,7 @@ out vec3 ecLightDir;
 out vec3 ecNormal;
 out vec3 ecViewDir;
 
+
 void main()
 {
 	 ecPosition = MVMatrix * vec4(VertexPosition, 1);			
@@ -34,4 +47,6 @@ void main()
 	 ecNormal =  NormalMatrix * VertexNormal;
 	 ecViewDir = -vec3(ecPosition);
 	 gl_Position = PMatrix * ecPosition;
+
+
 }

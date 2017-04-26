@@ -48,6 +48,12 @@
     <ClCompile Include="demo9_1.cpp">
       <Filter>Demos</Filter>
     </ClCompile>
+    <ClCompile Include="demo_project.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo10.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demos.h">
@@ -208,6 +214,12 @@
       <Filter>Demos</Filter>
     </ClInclude>
     <ClInclude Include="demo9_1.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo_project.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo10.h">
       <Filter>Demos</Filter>
     </ClInclude>
   </ItemGroup>

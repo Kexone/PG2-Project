@@ -22,17 +22,15 @@ in vec3 ecViewDir;
 
 void main()
 {
-	//vec3 N = normalize(ecNormal);
-	//vec3 L = normalize(ecLightDir);
-	//if( dot(V,L)<0 ){
-	//vec3 V = reflect(N,L);
-
-	if(dot(ecLightDir,ecNormal)<0){
-	
-		FragColor = vec4(1,0,1,1);
+	vec3 N = normalize(ecNormal);
+	vec3 L = normalize(ecLightDir);
+	vec3 R = 2 * dot(N,L) * N - L;
+	if(dot(ecLightDir, ecNormal) < 0) {
+		FragColor = vec4(1,1,1,1);
 	}
-	else FragColor = vec4(0,0,1,1);
-
-
+	else {
+		FragColor = vec4(0,0,0,1);
+	}
+	
 
 }
