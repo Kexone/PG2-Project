@@ -1,9 +1,9 @@
-#ifndef __DEMO_PROJECT_H_
-#define __DEMO_PROJECT_H_
+#ifndef __DEMO11_H_
+#define __DEMO11_H_
 
 #include <sceneInitializer.h>
 
-class DemoProject : public SceneInitializer
+class Demo11 : public SceneInitializer
 {
 private:
 	void initShaders();
@@ -13,10 +13,9 @@ private:
 	void initVAOs();
 	void initInfoEntities();
 	void initSceneEntities();
-	float angle;
 
 public:
-	DemoProject(SceneData *sdPtr) : SceneInitializer(sdPtr) {}
+	Demo11(SceneData *sdPtr) : SceneInitializer(sdPtr) {}
 
 	void render();
 };

@@ -275,6 +275,7 @@ copy "$(ANTTWEAKBAR_BIN)\*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="demo10.cpp" />
+    <ClCompile Include="demo11.cpp" />
     <ClCompile Include="demo2.cpp" />
     <ClCompile Include="demo3.cpp" />
     <ClCompile Include="demo4.cpp" />
@@ -328,6 +329,7 @@ copy "$(ANTTWEAKBAR_BIN)\*.dll" "$(OutDir)"</Command>
     <ClInclude Include="CoreHeaders\vao_SceneOrigin.h" />
     <ClInclude Include="CoreHeaders\vcDefs.h" />
     <ClInclude Include="demo10.h" />
+    <ClInclude Include="demo11.h" />
     <ClInclude Include="demo2.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
