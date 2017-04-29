@@ -43,24 +43,17 @@ in VS_OUT {
 
 void main()
 {
-	vec3 tsTextureNormal = texture2D(normalTexture, fs_in.tsTexCoords).rgb * 2.0 - vec3(1.0);
-	vec4 texColor = vec4(1.0, 1.0, 1.0, 1.0);
+	vec3 N = normalize(ecNormal);
+	vec3 L = normalize(ecLightDir);
+
+	float lambert = dot(N, L);
+	FragColor = material.ambient * light.ambient;
 	
-	texColor = texColor * texture2D(diffuseTexture, fs_in.tsTexCoords).rgba;
-	FragColor = light.ambient * texColor * material.ambient;
+	vec3 E = normalize(ecViewDir);
+    vec3 R = normalize(reflect(-L, N));    
 
-	// Lambert test
-	vec3 N = normalize(tsTextureNormal + fs_in.tsNormal);
-	vec3 L = normalize(fs_in.tsLightDir);
-	float lambert = max(dot(N, L), 0.0);
+	vec4 diffuse = abs(lambert) * material.diffuse * light.diffuse;
+    vec4 specular = pow(abs(dot(R, E)), material.shininess) * light.specular * material.specular;
 
-	if (lambert > 0.0) {
-		FragColor += light.diffuse * texColor * lambert * material.diffuse;
-
-		vec3 E = normalize(fs_in.tsViewDir);
-        vec3 R = normalize(2.0 * dot(N, fs_in.tsLightDir) * N - fs_in.tsLightDir);
-        float specular = pow(max(dot(R, E), 0.0), material.shininess);
-
-		FragColor += light.specular * texColor * specular * material.specular;
-	}
+	FragColor += diffuse + specular;
 }
