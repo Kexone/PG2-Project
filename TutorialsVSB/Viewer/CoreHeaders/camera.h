@@ -230,9 +230,9 @@ private:
 //const glm::vec3 Camera::CAMERA_DEFAULT_WORLD_ZAXIS(0.0f, 0.0f, 1.0f);
 
 inline Camera::Camera() : 
-	CAMERA_DEFAULT_WORLD_XAXIS(glm::vec3(1.0f, 0.0f, 0.0f)), 
-	CAMERA_DEFAULT_WORLD_YAXIS(glm::vec3(0.0f, 1.0f, 0.0f)), 
-	CAMERA_DEFAULT_WORLD_ZAXIS(glm::vec3(0.0f, 0.0f, 1.0f))
+	CAMERA_DEFAULT_WORLD_XAXIS(glm::vec3(5.0f, 0.0f, 0.0f)), 
+	CAMERA_DEFAULT_WORLD_YAXIS(glm::vec3(0.0f, 5.0f, 0.0f)), 
+	CAMERA_DEFAULT_WORLD_ZAXIS(glm::vec3(0.0f, 0.0f, 5.0f))
 {
 	m_isPerspectiveCamera = true;
 

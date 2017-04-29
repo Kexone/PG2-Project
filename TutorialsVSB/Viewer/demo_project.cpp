@@ -1,12 +1,8 @@
 #include "demo_Project.h"
-
 #include "vao_SceneOrigin.h"
 #include "vao_GridXY.h"
-#include "vao_CubeV3C4N3T2.h"
-
 #include "entity_SceneOrigin.h"
 #include "entity_GridXY.h"
-#include "entity_Cube.h"
 #include "entity_OBJ.h"
 
 void DemoProject::initShaders()
@@ -14,9 +10,8 @@ void DemoProject::initShaders()
 	angle = 1;
 	addResPath("shaders/");
 	initShaderProgram("simple_v3_c4.vert", "simple_v3_c4.frag");
-
-	//TODO - update previous ADS shader to accept texture:
 	initShaderProgram("project/goochOBJ_v3_n3_t3.vert", "project/goochOBJ_v3_n3_t3.frag");
+	initShaderProgram("project/adsOBJ_v3_n3_t3_phong.vert", "project/adsOBJ_v3_n3_t3_phong.frag");
 	initShaderProgram("project/adsOBJ_v3_n3_t3_normal.vert", "project/adsOBJ_v3_n3_t3_normal.frag");
 	initShaderProgram("project/adsOBJ_v3_n3_t3_parallax_steep_interpol.vert", "project/adsOBJ_v3_n3_t3_parallax_steep_interpol.frag");
 	initShaderProgram("project/adsObj_v3_n3_t3_displacement.vert", "project/adsObj_v3_n3_t3_displacement.frag", 0, "project/adsObj_v3_n3_t3_displacement.cont", "project/adsObj_v3_n3_t3_displacement.eval");
@@ -25,15 +20,21 @@ void DemoProject::initShaders()
 
 void DemoProject::initModels()
 {
+	const char* models[] = 
+	{
+		"basic/cube.obj", 
+		"basic/plane.obj", 
+		"project/chest/chest.obj",
+		"basic/bigplane.obj",  
+	};
 	ObjLoader objL;
 	Model* m;
 	addResPath("models/");
-	m = objL.loadModel(getResFile("basic/cube.obj"));
-	m_sceneData->models.push_back(m);
-	m = objL.loadModel(getResFile("basic/plane.obj"));
-	m_sceneData->models.push_back(m);
-	m = objL.loadModel(getResFile("basic/bigplane.obj"));
-	m_sceneData->models.push_back(m);
+	for (int i = 0; i < 4; i++)
+	{
+		m = objL.loadModel(getResFile(models[i]));
+		m_sceneData->models.push_back(m);
+	}
 	resetResPath();
 }
 
@@ -58,6 +59,11 @@ void DemoProject::initVAOs()
 	VAO* vao4 = new VAO();
 	vao4->createFromModelWithTBN(m_sceneData->models[2]);
 	m_sceneData->vaos.push_back(vao4);
+
+	VAO* vao5 = new VAO();
+	vao5->createFromModelWithTBN(m_sceneData->models[3]);
+	m_sceneData->vaos.push_back(vao5);
+
 }
 
 void DemoProject::initTextures()
@@ -65,123 +71,43 @@ void DemoProject::initTextures()
 	addResPath("textures/");
 	//Load sprite textures
 	GLuint texID;
-	FIBITMAP *image = ImageManager::GenericLoader(getResFile("stonewallDiffuse.bmp"), 0);
+	const char *texture[] = { 
+		"grassDIFFUSE.jpg",
+		"grassNORMAL.jpg",
+		"grassDISP.jpg",
+		"wood_d.jpg",
+		"wood_n.jpg",
+		"wood_h.jpg",
+		
+	};
+	for(int i = 0; i < 6; i++)
+	{
+		FIBITMAP *image = ImageManager::GenericLoader(getResFile(texture[i]), 0);
+		glGenTextures(1, &texID);
+		glBindTexture(GL_TEXTURE_2D, texID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	//TODO Create Texture:
-	glGenTextures(1, &texID);
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		// Load tex image based on depth
+		if (FreeImage_GetBPP(image) == 8) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+		}
+		else if (FreeImage_GetBPP(image) == 24) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+		}
+		else if (FreeImage_GetBPP(image) == 32) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+		}
 
-	// Load tex image based on depth
-	if (FreeImage_GetBPP(image) == 8) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
+		glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
+
+		FreeImage_Unload(image);
+		m_sceneData->textures.push_back(texID);
 	}
-	else if (FreeImage_GetBPP(image) == 24) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 32) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-	glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
-
-	FreeImage_Unload(image);
-	m_sceneData->textures.push_back(texID);
-
-
-	// Another texture
-	image = ImageManager::GenericLoader(getResFile("stonewallNormal.bmp"), 0);
-
-	//TODO Create Texture:
-	glGenTextures(1, &texID);
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	// Load tex image based on depth
-	if (FreeImage_GetBPP(image) == 8) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 24) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 32) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-	glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
-
-	FreeImage_Unload(image);
-	m_sceneData->textures.push_back(texID);
-
-
-	// Another texture
-	image = ImageManager::GenericLoader(getResFile("stonewallDepth.bmp"), 0);
-
-	//TODO Create Texture:
-	glGenTextures(1, &texID);
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	// Load tex image based on depth
-	if (FreeImage_GetBPP(image) == 8) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 24) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 32) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-	glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
-
-	FreeImage_Unload(image);
-	m_sceneData->textures.push_back(texID);
-
-	// Another texture
-	image = ImageManager::GenericLoader(getResFile("grassDIFFUSE.jpg"), 0);
-
-	//TODO Create Texture:
-	glGenTextures(1, &texID);
-	glBindTexture(GL_TEXTURE_2D, texID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	// Load tex image based on depth
-	if (FreeImage_GetBPP(image) == 8) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_RED, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 24) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGR, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-	else if (FreeImage_GetBPP(image) == 32) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FreeImage_GetWidth(image), FreeImage_GetHeight(image), 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(image));
-	}
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-	glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 1.5f);
-
-	FreeImage_Unload(image);
-	m_sceneData->textures.push_back(texID);
-
 	resetResPath();
 }
 
@@ -222,7 +148,7 @@ void DemoProject::initInfoEntities()
 void DemoProject::initSceneEntities()
 {
 	Entity_OBJ *obj = new Entity_OBJ(m_sceneData->models[0], m_sceneData->vaos[2]);
-	obj->setPosition(4, -1, 1);
+	obj->setPosition(4, 4, 2);
 	obj->setOrientation(0, 0, 180);
 	obj->setScale(0.5, 0.5, 0.5);
 	obj->m_material = m_sceneData->materials[0];
@@ -230,15 +156,23 @@ void DemoProject::initSceneEntities()
 	m_sceneData->sceneEntities.push_back(obj);
 
 	obj = new Entity_OBJ(m_sceneData->models[1], m_sceneData->vaos[3]);
-	obj->setPosition(2, 0, 1);
-	obj->setOrientation(0, 0, 90);
+	obj->setPosition(2, 4, 6);
+	obj->setOrientation(0, 0, 0);
 	obj->setScale(1, 1, 1);
 	obj->m_material = m_sceneData->materials[0];
 	obj->init();
 	m_sceneData->sceneEntities.push_back(obj);
 
 	obj = new Entity_OBJ(m_sceneData->models[2], m_sceneData->vaos[4]);
-	obj->setPosition(0, 0, 0);
+	obj->setPosition(-5, 4, 1.55);
+	obj->setOrientation(0, 0, 0);
+	obj->setScale(0.5, 0.5, 0.5);
+	obj->m_material = m_sceneData->materials[0];
+	obj->init();
+	m_sceneData->sceneEntities.push_back(obj);
+
+	obj = new Entity_OBJ(m_sceneData->models[3], m_sceneData->vaos[5]);
+	obj->setPosition(1, 1, 1);
 	obj->setOrientation(0, 0, 0);
 	obj->setScale(1, 1, 1);
 	obj->m_material = m_sceneData->materials[0];
@@ -269,7 +203,7 @@ void DemoProject::render()
 #pragma region Draw Scene Entities
 
 	#pragma region Draw Cube
-		ss->m_activeShader = m_sceneData->shaderPrograms[3];
+		ss->m_activeShader = m_sceneData->shaderPrograms[4];
 		ss->m_activeShader->enable();
 		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[0]);
 
@@ -311,7 +245,7 @@ void DemoProject::render()
 		glUniform1i(uniform, 2);
 		e->setPosition(0, 0, 0);
 		e->rotate(0.1, 0, 0, 1);	
-		e->setPosition(1, -1, 1);
+		e->setPosition(4, -4, 2);
 		//e->rotate(0.1, 1, 0, 0);
 		//e->setScale(1, 1, 1);
 		//e->setPosition(1, -1, 1);
@@ -329,11 +263,13 @@ void DemoProject::render()
 		e->draw();
 	#pragma endregion 
 
-	#pragma region Draw main plane
-		ss->m_activeShader = m_sceneData->shaderPrograms[3];
+
+	#pragma region Draw chest
+		ss->m_activeShader = m_sceneData->shaderPrograms[4];
 		ss->m_activeShader->enable();
-		//e = m_sceneData->sceneEntities[2];
-		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[2]);;
+		Light::setShaderUniform(m_sceneData->lights.at(0), ss->m_activeShader, "light");
+		Material::setShaderUniform(e->m_material, ss->m_activeShader, "material");
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[2]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
 		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
@@ -342,8 +278,39 @@ void DemoProject::render()
 		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[3]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
 		glUniform1i(uniform, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[4]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
+		glUniform1i(uniform, 1);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[5]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+		glUniform1i(uniform, 2);
+
 		e->draw();
 	#pragma endregion 
 
+	#pragma region Draw main plane
+		ss->m_activeShader = m_sceneData->shaderPrograms[4];
+		ss->m_activeShader->enable();
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
+		glUniform1i(uniform, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
+		glUniform1i(uniform, 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+		e->draw();
+	#pragma endregion 
 #pragma endregion
 }
