@@ -4,10 +4,10 @@
 #include "entity_SceneOrigin.h"
 #include "entity_GridXY.h"
 #include "entity_OBJ.h"
+#include <vector>
 
 void DemoProject::initShaders()
 {
-	angle = 1;
 	addResPath("shaders/");
 	initShaderProgram("simple_v3_c4.vert", "simple_v3_c4.frag");
 	initShaderProgram("project/goochOBJ_v3_n3_t3.vert", "project/goochOBJ_v3_n3_t3.frag");
@@ -15,27 +15,56 @@ void DemoProject::initShaders()
 	initShaderProgram("project/adsOBJ_v3_n3_t3_normal.vert", "project/adsOBJ_v3_n3_t3_normal.frag");
 	initShaderProgram("project/adsOBJ_v3_n3_t3_parallax_steep_interpol.vert", "project/adsOBJ_v3_n3_t3_parallax_steep_interpol.frag");
 	initShaderProgram("project/adsObj_v3_n3_t3_displacement.vert", "project/adsObj_v3_n3_t3_displacement.frag", 0, "project/adsObj_v3_n3_t3_displacement.cont", "project/adsObj_v3_n3_t3_displacement.eval");
+	initShaderProgram("project/particles_render.vert", "project/particles_render.frag", "project/particles_render.geom");
 	resetResPath();
 }
 
 void DemoProject::initModels()
 {
-	const char* models[] = 
+	const char* models[] =
 	{
-		"basic/cube.obj", 
-		"basic/plane.obj", 
-		"project/chest/chest.obj",
-		"basic/bigplane.obj",  
+		"basic/cube.obj",
+		"basic/plane.obj",
+		"project/ChestCartoon/ChestCartoon.obj",
+		"basic/bigplane.obj",
+		"project/coin.obj"
 	};
 	ObjLoader objL;
 	Model* m;
 	addResPath("models/");
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		m = objL.loadModel(getResFile(models[i]));
 		m_sceneData->models.push_back(m);
 	}
 	resetResPath();
+	initParticles();
+}
+
+void DemoProject::initParticles()
+{
+	GLuint VBO;
+	GLfloat particle_quad[] = {
+		0.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+
+		0.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f, 0.0f
+	};
+	glGenVertexArrays(1, &this->particlesVAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(this->particlesVAO);
+	// Fill mesh buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particle_quad), particle_quad, GL_STATIC_DRAW);
+	// Set mesh attributes
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+	glBindVertexArray(0);
+	for (GLuint i = 0; i < nr_particles; ++i)
+		particles.push_back(Particle());
 }
 
 void DemoProject::initVAOs()
@@ -52,17 +81,25 @@ void DemoProject::initVAOs()
 	vao2->createFromModelWithTBN(m_sceneData->models[0]);
 	m_sceneData->vaos.push_back(vao2);
 
+	//plane
 	VAO* vao3 = new VAO();
 	vao3->createFromModelWithTBN(m_sceneData->models[1]);
 	m_sceneData->vaos.push_back(vao3);
 
+	//chest
 	VAO* vao4 = new VAO();
 	vao4->createFromModelWithTBN(m_sceneData->models[2]);
 	m_sceneData->vaos.push_back(vao4);
 
+	//bigplane
 	VAO* vao5 = new VAO();
 	vao5->createFromModelWithTBN(m_sceneData->models[3]);
 	m_sceneData->vaos.push_back(vao5);
+
+	//coin
+	VAO* vao6 = new VAO();
+	vao6->createFromModelWithTBN(m_sceneData->models[4]);
+	m_sceneData->vaos.push_back(vao6);
 
 }
 
@@ -132,6 +169,25 @@ void DemoProject::initMaterials()
 
 	m->m_diffuseTextureGL = m_sceneData->textures[0];
 	m_sceneData->materials.push_back(m);
+
+	Material *n = new Material();
+	n->setName("Gold");
+	n->m_diffuse[0] = 1.0f;
+	n->m_diffuse[1] = 0.68f;
+	n->m_diffuse[2] = -0.23f;
+	n->m_diffuse[3] = 0.12f;
+	n->m_transparency = 0.0f;
+	n->m_specular[0] = 1.0f;
+	n->m_specular[1] = 1.0f;
+	n->m_specular[2] = 1.0f;
+	n->m_specular[3] = 1.0f;
+	n->m_ambient[0] = 1.0f;
+	n->m_ambient[1] = 1.0f;
+	n->m_ambient[2] = 1.0f;
+	n->m_ambient[3] = 1.0f;
+
+	n->m_diffuseTextureGL = m_sceneData->textures[1];
+	m_sceneData->materials.push_back(n);
 }
 
 void DemoProject::initInfoEntities()
@@ -163,19 +219,29 @@ void DemoProject::initSceneEntities()
 	obj->init();
 	m_sceneData->sceneEntities.push_back(obj);
 
+	//chest
 	obj = new Entity_OBJ(m_sceneData->models[2], m_sceneData->vaos[4]);
-	obj->setPosition(-5, 4, 1.55);
-	obj->setOrientation(0, 0, 0);
+	obj->setPosition(-2, 1, 0.9);
+	obj->setOrientation(0, 0, 180);
 	obj->setScale(0.5, 0.5, 0.5);
 	obj->m_material = m_sceneData->materials[0];
 	obj->init();
 	m_sceneData->sceneEntities.push_back(obj);
 
+	
 	obj = new Entity_OBJ(m_sceneData->models[3], m_sceneData->vaos[5]);
 	obj->setPosition(1, 1, 1);
 	obj->setOrientation(0, 0, 0);
 	obj->setScale(1, 1, 1);
 	obj->m_material = m_sceneData->materials[0];
+	obj->init();
+	m_sceneData->sceneEntities.push_back(obj);
+	
+	//coin
+	obj = new Entity_OBJ(m_sceneData->models[4], m_sceneData->vaos[6]);
+	obj->setPosition(4, 1, 4);
+	obj->setOrientation(180, 180, 270);
+	obj->m_material = m_sceneData->materials[1];
 	obj->init();
 	m_sceneData->sceneEntities.push_back(obj);
 }
@@ -249,19 +315,18 @@ void DemoProject::render()
 		//e->rotate(0.1, 1, 0, 0);
 		//e->setScale(1, 1, 1);
 		//e->setPosition(1, -1, 1);
-		angle += 0.1;
 		e->draw();
 
 	#pragma endregion 
 
-	#pragma region Draw Plane test
-		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[1]);
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
-		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
-		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
-		e->draw();
-	#pragma endregion 
+	//#pragma region Draw Plane test
+	//	e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[1]);
+	//	uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+	//	glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+	//	uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+	//	glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+	//	e->draw();
+	//#pragma endregion 
 
 
 	#pragma region Draw chest
@@ -290,27 +355,102 @@ void DemoProject::render()
 		e->draw();
 	#pragma endregion 
 
-	#pragma region Draw main plane
-		ss->m_activeShader = m_sceneData->shaderPrograms[4];
+//#pragma region Draw main plane
+//		ss->m_activeShader = m_sceneData->shaderPrograms[4];
+//		ss->m_activeShader->enable();
+//		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
+//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+//		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+//		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+//		glActiveTexture(GL_TEXTURE0);
+//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
+//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
+//		glUniform1i(uniform, 0);
+//		glActiveTexture(GL_TEXTURE1);
+//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
+//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
+//		glUniform1i(uniform, 1);
+//
+//		glActiveTexture(GL_TEXTURE2);
+//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
+//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+//		e->draw();
+//	#pragma endregion
+	
+	#pragma region Draw coins
+		ss->m_activeShader = m_sceneData->shaderPrograms[2];
 		ss->m_activeShader->enable();
-		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
-		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
-		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
-		glUniform1i(uniform, 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
-		glUniform1i(uniform, 1);
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[4]);
+		float positionCoinY[] = { 0.7, 1.2, 2.2, 3.7, 4.2 };
+		float positionCoinX[] = { -1.1, -1.5, -2.0, -2.2, -2.7 };
+		float tiltRoll[] = { 45, 20 };
+		for (int h = 1; h < 5; h++) {
+			for (int i = 0; i < 5; i++)
+			{
+				Material::setShaderUniform(e->m_material, ss->m_activeShader, "material");
+				Light::setShaderUniform(m_sceneData->lights.at(0), ss->m_activeShader, "light");
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+				glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+				glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+				for (int j = 0; j < 2; j++)
+				{
+					e->setPosition(positionCoinX[i], positionCoinY[j], h / 2);
+					e->setOrientation(tiltRoll[j], 0, positionCoinX[i] * 100);
+					e->draw();
+				}
+			}
+		}
+	#pragma endregion
 
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
-		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
-		e->draw();
-	#pragma endregion 
+	#pragma region Draw particles
+		ss->m_activeShader = m_sceneData->shaderPrograms[6];
+		ss->m_activeShader->enable();
+		GLuint nr_new_particles = 2;
+		glm::vec3 offset= glm::vec3(0.01f);
+		float dt = 0.00001f;
+		// Add new particles
+		for (GLuint i = 0; i < nr_new_particles; ++i)
+		{
+			int unusedParticle = ps.FirstUnusedParticle(nr_particles,particles);
+			ps.RespawnParticle(particles[unusedParticle], offset);
+		}
+		// Update all particles
+		for (GLuint i = 0; i < nr_particles; ++i)
+		{
+			Particle &p = particles[i];
+			p.Life -= dt; // reduce life
+			if (p.Life > 0.0f)
+			{	// particle is alive, thus update
+				p.Position -= p.Velocity * dt;
+				//p.Color.a -= dt*10;
+			}
+		}
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		for (Particle particle : particles)
+		{
+			if (particle.Life > 0.0f)
+			{
+				//e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[4]);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[3]);
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "sprite");
+				glUniform1i(uniform, 0);
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "TMatrix");
+				glUniformMatrix4fv(uniform, 1, GL_FALSE, (float*)&projectionMatrix[0]);
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+				glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "offset");
+				glUniform3f(uniform, particle.Position.x, particle.Position.y, particle.Position.z);
+				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "color");
+				glUniform4f(uniform, particle.Color.a, particle.Color.r, particle.Color.g, particle.Color.b);
+				glBindVertexArray(particlesVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 12);
+				glBindVertexArray(0);
+			}
+		}
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	#pragma endregion
 #pragma endregion
 }

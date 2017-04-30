@@ -57,6 +57,9 @@
     <ClCompile Include="demo11.cpp">
       <Filter>Demos</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demos.h">
@@ -226,6 +229,12 @@
       <Filter>Demos</Filter>
     </ClInclude>
     <ClInclude Include="demo11.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
       <Filter>Demos</Filter>
     </ClInclude>
   </ItemGroup>
