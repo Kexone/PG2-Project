@@ -1,14 +1,13 @@
-#version 330
+#version 400 core
+in vec2 TexCoords;
+in vec4 ParticleColor;
+out vec4 color;
 
-uniform sampler2D gSampler;
-
-smooth in vec2 vTexCoord;
-flat in vec4 vColorPart;
-
-out vec4 FragColor;
+uniform sampler2D sprite;
 
 void main()
 {
-  vec4 vTexColor = texture2D(gSampler, vTexCoord);
-  FragColor = vec4(vTexColor.xyz, 1.0)*vColorPart;
+    //color = (texture(sprite, TexCoords) * ParticleColor);
+    color = (texture(sprite, vec2(1.0f,1.0f)) * ParticleColor);
+
 }

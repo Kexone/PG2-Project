@@ -1,21 +1,17 @@
-#version 330
+#version 400 core
+layout (location = 0) in vec4 vertex; // <vec2 position, vec2 texCoords>
 
-layout (location = 0) in vec3 vPosition;
-layout (location = 2) in vec3 vColor;
-layout (location = 3) in float fLifeTime;
-layout (location = 4) in float fSize;
-layout (location = 5) in int iType;
+out vec2 TexCoords;
+out vec4 ParticleColor;
 
-out vec3 vColorPass;
-out float fLifeTimePass;
-out float fSizePass;
-out int iTypePass;
+uniform mat4 TMatrix;
+uniform vec3 offset;
+uniform vec4 color;
 
 void main()
 {
-   gl_Position = vec4(vPosition, 1.0);
-   vColorPass = vColor;
-   fSizePass = fSize;
-   fLifeTimePass = fLifeTime;
-   iTypePass = iType;
+    float scale = 10.0f;
+    TexCoords = vertex.zw;
+    ParticleColor = color;
+    gl_Position = TMatrix * vec4((vertex.xyz * scale) + offset, 1.0);
 }
