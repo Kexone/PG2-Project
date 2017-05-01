@@ -1,9 +1,11 @@
 #include "demo_Project.h"
 #include "vao_SceneOrigin.h"
 #include "vao_GridXY.h"
+#include "vao_particle.h"
 #include "entity_SceneOrigin.h"
 #include "entity_GridXY.h"
 #include "entity_OBJ.h"
+#include "entity_Particles.h"
 #include <vector>
 
 void DemoProject::initShaders()
@@ -15,57 +17,35 @@ void DemoProject::initShaders()
 	initShaderProgram("project/adsOBJ_v3_n3_t3_normal.vert", "project/adsOBJ_v3_n3_t3_normal.frag");
 	initShaderProgram("project/adsOBJ_v3_n3_t3_parallax_steep_interpol.vert", "project/adsOBJ_v3_n3_t3_parallax_steep_interpol.frag");
 	initShaderProgram("project/adsObj_v3_n3_t3_displacement.vert", "project/adsObj_v3_n3_t3_displacement.frag", 0, "project/adsObj_v3_n3_t3_displacement.cont", "project/adsObj_v3_n3_t3_displacement.eval");
-	initShaderProgram("project/particles_render.vert", "project/particles_render.frag", "project/particles_render.geom");
+	initShaderProgram("project/particles_render.vert", "project/particles_render.frag");
 	resetResPath();
 }
 
 void DemoProject::initModels()
 {
+	position = 5;
+	changeDir = false;
 	const char* models[] =
 	{
 		"basic/cube.obj",
 		"basic/plane.obj",
 		"project/ChestCartoon/ChestCartoon.obj",
 		"basic/bigplane.obj",
-		"project/coin.obj"
+		"project/coin.obj",
+		"project/portal/portals.obj",
+		"project/arrow.obj",
 	};
 	ObjLoader objL;
 	Model* m;
 	addResPath("models/");
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 7; i++)
 	{
 		m = objL.loadModel(getResFile(models[i]));
 		m_sceneData->models.push_back(m);
 	}
 	resetResPath();
-	initParticles();
 }
 
-void DemoProject::initParticles()
-{
-	GLuint VBO;
-	GLfloat particle_quad[] = {
-		0.0f, 1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 0.0f,
-
-		0.0f, 1.0f, 0.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f, 0.0f
-	};
-	glGenVertexArrays(1, &this->particlesVAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(this->particlesVAO);
-	// Fill mesh buffer
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(particle_quad), particle_quad, GL_STATIC_DRAW);
-	// Set mesh attributes
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
-	glBindVertexArray(0);
-	for (GLuint i = 0; i < nr_particles; ++i)
-		particles.push_back(Particle());
-}
 
 void DemoProject::initVAOs()
 {
@@ -101,6 +81,21 @@ void DemoProject::initVAOs()
 	vao6->createFromModelWithTBN(m_sceneData->models[4]);
 	m_sceneData->vaos.push_back(vao6);
 
+	VAO_Particle* vaoPortal = new VAO_Particle();
+	vaoPortal->init();
+	m_sceneData->vaos.push_back(vaoPortal);
+
+	VAO* vao7 = new VAO();
+	vao7->createFromModelWithTBN(m_sceneData->models[5]);
+	m_sceneData->vaos.push_back(vao7);
+
+	VAO_Particle* vaoParticles = new VAO_Particle();
+	vaoParticles->init();
+	m_sceneData->vaos.push_back(vaoParticles);
+
+	VAO* vao9 = new VAO();
+	vao9->createFromModelWithTBN(m_sceneData->models[6]);
+	m_sceneData->vaos.push_back(vao9);
 }
 
 void DemoProject::initTextures()
@@ -115,9 +110,10 @@ void DemoProject::initTextures()
 		"wood_d.jpg",
 		"wood_n.jpg",
 		"wood_h.jpg",
+		"sand.jpg",
 		
 	};
-	for(int i = 0; i < 6; i++)
+	for(int i = 0; i < 7; i++)
 	{
 		FIBITMAP *image = ImageManager::GenericLoader(getResFile(texture[i]), 0);
 		glGenTextures(1, &texID);
@@ -170,24 +166,24 @@ void DemoProject::initMaterials()
 	m->m_diffuseTextureGL = m_sceneData->textures[0];
 	m_sceneData->materials.push_back(m);
 
-	Material *n = new Material();
-	n->setName("Gold");
-	n->m_diffuse[0] = 1.0f;
-	n->m_diffuse[1] = 0.68f;
-	n->m_diffuse[2] = -0.23f;
-	n->m_diffuse[3] = 0.12f;
-	n->m_transparency = 0.0f;
-	n->m_specular[0] = 1.0f;
-	n->m_specular[1] = 1.0f;
-	n->m_specular[2] = 1.0f;
-	n->m_specular[3] = 1.0f;
-	n->m_ambient[0] = 1.0f;
-	n->m_ambient[1] = 1.0f;
-	n->m_ambient[2] = 1.0f;
-	n->m_ambient[3] = 1.0f;
+	m = new Material();
+	m->setName("Gold");
+	m->m_diffuse[0] = 1.0f;
+	m->m_diffuse[1] = 0.68f;
+	m->m_diffuse[2] = -0.23f;
+	m->m_diffuse[3] = 0.12f;
+	m->m_transparency = 0.0f;
+	m->m_specular[0] = 1.0f;
+	m->m_specular[1] = 1.0f;
+	m->m_specular[2] = 1.0f;
+	m->m_specular[3] = 1.0f;
+	m->m_ambient[0] = 1.0f;
+	m->m_ambient[1] = 1.0f;
+	m->m_ambient[2] = 1.0f;
+	m->m_ambient[3] = 1.0f;
 
-	n->m_diffuseTextureGL = m_sceneData->textures[1];
-	m_sceneData->materials.push_back(n);
+	m->m_diffuseTextureGL = m_sceneData->textures[1];
+	m_sceneData->materials.push_back(m);
 }
 
 void DemoProject::initInfoEntities()
@@ -242,6 +238,36 @@ void DemoProject::initSceneEntities()
 	obj->setPosition(4, 1, 4);
 	obj->setOrientation(180, 180, 270);
 	obj->m_material = m_sceneData->materials[1];
+	obj->init();
+	m_sceneData->sceneEntities.push_back(obj);
+
+	//particle portal
+	Entity_Particles* particle = new Entity_Particles(0,m_sceneData->vaos[7]);
+	particle->setPosition(0, 0, 0);
+	particle->m_material = m_sceneData->materials[1];
+	particle->init();
+	m_sceneData->sceneEntities.push_back(particle);
+
+	//portal door
+	obj = new Entity_OBJ(m_sceneData->models[5], m_sceneData->vaos[8]);
+	obj->setPosition(6.3, 8.3, 1);
+	obj->setScale(3.5, 3.5, 2.22);
+	obj->m_material = m_sceneData->materials[0];
+	obj->init();
+	m_sceneData->sceneEntities.push_back(obj);
+
+	//particle
+	particle = new Entity_Particles(1,m_sceneData->vaos[9]);
+	particle->setPosition(-2.5, 0.2, 1.5);
+	particle->setScale(0.5, 0.5, 0.5);
+	particle->m_material = m_sceneData->materials[1];
+	particle->init();
+	m_sceneData->sceneEntities.push_back(particle);
+
+	//arrow
+	obj = new Entity_OBJ(m_sceneData->models[6], m_sceneData->vaos[10]);
+	obj->setPosition(-2.5, 1, 5);
+	obj->m_material = m_sceneData->materials[0];
 	obj->init();
 	m_sceneData->sceneEntities.push_back(obj);
 }
@@ -355,28 +381,28 @@ void DemoProject::render()
 		e->draw();
 	#pragma endregion 
 
-//#pragma region Draw main plane
-//		ss->m_activeShader = m_sceneData->shaderPrograms[4];
-//		ss->m_activeShader->enable();
-//		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
-//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
-//		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
-//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
-//		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
-//		glActiveTexture(GL_TEXTURE0);
-//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
-//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
-//		glUniform1i(uniform, 0);
-//		glActiveTexture(GL_TEXTURE1);
-//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
-//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
-//		glUniform1i(uniform, 1);
-//
-//		glActiveTexture(GL_TEXTURE2);
-//		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
-//		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
-//		e->draw();
-//	#pragma endregion
+	#pragma region Draw main plane
+		ss->m_activeShader = m_sceneData->shaderPrograms[4];
+		ss->m_activeShader->enable();
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
+		glUniform1i(uniform, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
+		glUniform1i(uniform, 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+		e->draw();
+	#pragma endregion
 	
 	#pragma region Draw coins
 		ss->m_activeShader = m_sceneData->shaderPrograms[2];
@@ -404,53 +430,89 @@ void DemoProject::render()
 		}
 	#pragma endregion
 
+	#pragma region Draw portal door
+		ss->m_activeShader = m_sceneData->shaderPrograms[2];
+		ss->m_activeShader->enable();
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[6]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[6]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
+		glUniform1i(uniform, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
+		glUniform1i(uniform, 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+		e->draw();
+	#pragma endregion
+
+	#pragma region Draw portal particles
+		ss->m_activeShader = m_sceneData->shaderPrograms[6];
+		
+		Entity_Particles* particles = (Entity_Particles*)m_sceneData->sceneEntities[5];
+		particles->setScale(10.1, 10, 10);
+		particles->setPosition(2, 2.5, 4.8);
+		particles->update();
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		ss->m_activeShader->enable();
+
+		//Material::setShaderUniform(e->m_material, ss->m_activeShader, "material");
+		particles->draw();
+		ss->m_activeShader->disable();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	#pragma endregion
+
+
 	#pragma region Draw particles
 		ss->m_activeShader = m_sceneData->shaderPrograms[6];
-		ss->m_activeShader->enable();
-		GLuint nr_new_particles = 2;
-		glm::vec3 offset= glm::vec3(0.01f);
-		float dt = 0.00001f;
-		// Add new particles
-		for (GLuint i = 0; i < nr_new_particles; ++i)
-		{
-			int unusedParticle = ps.FirstUnusedParticle(nr_particles,particles);
-			ps.RespawnParticle(particles[unusedParticle], offset);
-		}
-		// Update all particles
-		for (GLuint i = 0; i < nr_particles; ++i)
-		{
-			Particle &p = particles[i];
-			p.Life -= dt; // reduce life
-			if (p.Life > 0.0f)
-			{	// particle is alive, thus update
-				p.Position -= p.Velocity * dt;
-				//p.Color.a -= dt*10;
-			}
-		}
+
+		particles = (Entity_Particles*)m_sceneData->sceneEntities[7];
+		
+		particles->update();
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		for (Particle particle : particles)
-		{
-			if (particle.Life > 0.0f)
-			{
-				//e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[4]);
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[3]);
-				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "sprite");
-				glUniform1i(uniform, 0);
-				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "TMatrix");
-				glUniformMatrix4fv(uniform, 1, GL_FALSE, (float*)&projectionMatrix[0]);
-				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
-				glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
-				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "offset");
-				glUniform3f(uniform, particle.Position.x, particle.Position.y, particle.Position.z);
-				uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "color");
-				glUniform4f(uniform, particle.Color.a, particle.Color.r, particle.Color.g, particle.Color.b);
-				glBindVertexArray(particlesVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 12);
-				glBindVertexArray(0);
-			}
-		}
+		ss->m_activeShader->enable();
+		Material::setShaderUniform(particles->m_material, ss->m_activeShader, "material");
+		particles->draw();
+		ss->m_activeShader->disable();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	#pragma endregion
+
+	#pragma region Draw arrow
+		ss->m_activeShader = m_sceneData->shaderPrograms[1];
+		ss->m_activeShader->enable();
+		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[8]);
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+		e->setPosition(-2, 1, position);
+		e->draw();
+	if(!changeDir)
+	{
+		position -= 0.05;
+
+	}
+	else if(changeDir)
+	{
+		position += 0.05;
+	}
+	if (position > 5.5)
+	{
+		changeDir = false;
+	}
+	if (position < 4.0)
+	{
+		changeDir = true;
+	}
 	#pragma endregion
 #pragma endregion
 }

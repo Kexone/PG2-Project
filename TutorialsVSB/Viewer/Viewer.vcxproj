@@ -349,6 +349,7 @@ copy "$(ANTTWEAKBAR_BIN)\*.dll" "$(OutDir)"</Command>
     <ClInclude Include="demo_project.h" />
     <ClInclude Include="entity_Cube.h" />
     <ClInclude Include="entity_CubeV3C4.h" />
+    <ClInclude Include="entity_Particles.h" />
     <ClInclude Include="entity_TetraHeader.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="Particle.h" />
@@ -357,6 +358,7 @@ copy "$(ANTTWEAKBAR_BIN)\*.dll" "$(OutDir)"</Command>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="vao_CubeV3C4.h" />
     <ClInclude Include="vao_CubeV3C4N3T2.h" />
+    <ClInclude Include="vao_particle.h" />
     <ClInclude Include="vao_TetraHeader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -2,9 +2,6 @@
 #define __DEMO_PROJECT_H_
 
 #include <sceneInitializer.h>
-#include "Particle.h"
-#include <vector>
-#include "ParticleSystem.h"
 
 class DemoProject : public SceneInitializer
 {
@@ -17,13 +14,12 @@ private:
 	void initVAOs();
 	void initInfoEntities();
 	void initSceneEntities();
-	vector<Particle> particles;
-	ParticleSystem ps;
-	GLuint nr_particles = 500;
 
 public:
 	DemoProject(SceneData *sdPtr) : SceneInitializer(sdPtr) {}
 	GLuint particlesVAO;
+	float position;
+	bool changeDir;
 	void render();
 };
 
