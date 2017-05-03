@@ -1,7 +1,6 @@
 #ifndef __PARTICLE_H_
 #define __PARTICLE_H
 #include <detail/type_vec3.hpp>
-#include <detail/type_vec4.hpp>
 
 
 struct Particle

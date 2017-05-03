@@ -11,5 +11,4 @@ void main()
     vec4 texColor = texture(sprite, TexCoords);
 	texColor.a = min(1, length(texColor.xyz));
     FragColor =  (texColor * ParticleColor);
-
 }  

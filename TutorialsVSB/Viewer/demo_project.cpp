@@ -32,7 +32,7 @@ void DemoProject::initModels()
 		"project/ChestCartoon/ChestCartoon.obj",
 		"basic/bigplane.obj",
 		"project/coin.obj",
-		"project/portal/portals.obj",
+		"project/portal/portal.obj",
 		"project/arrow.obj",
 	};
 	ObjLoader objL;
@@ -382,17 +382,28 @@ void DemoProject::render()
 	#pragma endregion 
 
 	#pragma region Draw main plane
-		ss->m_activeShader = m_sceneData->shaderPrograms[4];
+		ss->m_activeShader = m_sceneData->shaderPrograms[5];
 		ss->m_activeShader->enable();
 		e = static_cast<Entity_OBJ*>(m_sceneData->sceneEntities[3]);
+		Light::setShaderUniform(m_sceneData->lights.at(0), ss->m_activeShader, "light");
+
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "PMatrix");
 		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getProjectionMatrix());
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "VMatrix");
 		glUniformMatrix4fv(uniform, 1, GL_FALSE, ss->m_activeCamera->getViewMatrix());
+
+		Material::setShaderUniform(e->m_material, ss->m_activeShader, "material");
+
+		// Copy matrix to vertex shader
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "TMatrix");
+		glUniformMatrix4fv(uniform, 1, GL_FALSE, (float*)&projectionMatrix[0]);
+
+		// Activate textures & copy textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[0]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "diffuseTexture");
 		glUniform1i(uniform, 0);
+
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[1]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "normalTexture");
@@ -401,6 +412,19 @@ void DemoProject::render()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_sceneData->textures[2]);
 		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "depthTexture");
+		glUniform1i(uniform, 2);
+
+		uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "CameraPosition");
+		glUniform3fv(uniform, 1, (float*)&ss->m_activeCamera->getPosition()[0]);
+
+		glBindVertexArray(e->m_vao->m_object);
+		glPatchParameteri(GL_PATCH_VERTICES, 3);
+		for (int i = 0; i < e->m_vao->m_eai->size(); i++) {
+
+			glDrawArrays(GL_PATCHES, e->m_vao->m_eai->at(i).m_startIndex, e->m_vao->m_eai->at(i).m_noIndices);
+		}
+		glBindVertexArray(0);
+
 		e->draw();
 	#pragma endregion
 	

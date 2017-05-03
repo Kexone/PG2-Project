@@ -168,7 +168,7 @@ inline void Entity_Particles::draw(const unsigned int eid)
 			if ((uniform = glGetUniformLocation(ss->m_activeShader->m_programObject, "sprite")) >= 0) {
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, m_material->m_diffuseTextureGL);
-				glUniform1i(uniform, 0);			//Texture unit is set = sampler will access GL_TEXTURE0 = texture unit 0. DO NOT SET the diffuse texture diffuseTextureGL!!! 
+				glUniform1i(uniform, 0);
 			}
 
 			glBindVertexArray(vao_particle->m_object);
